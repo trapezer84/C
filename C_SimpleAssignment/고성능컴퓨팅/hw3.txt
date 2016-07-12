@@ -1,0 +1,125 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <mpi.h>
+
+int main(int argc, char *argv[])
+{
+	int my_rank;			// 프로세스 번호
+	int comm_sz;			// 계산에 참여한 프로세스 개수
+	int result[20];		// 모든 프로세스의 C 값을 모아올 장소 (버퍼), 최대 20개의 프로세스를 허용함
+	
+	int n;				//셀의 개수 
+	int tempo;			//벽난로 온도 
+	int count;			//루프의 실행 회수 
+	int **cell;				//이차원 배열 동적할당할 값 
+
+
+	int i, j, k;	
+	int m = 0;				//마지막 평균값을 구해줄 변수
+
+	MPI_Init(&argc, &argv);					 // MPI 환경 초기화 (주어진 프로세스의 갯수 적용)
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank); // 프로세스 번호 계산
+	MPI_Comm_size(MPI_COMM_WORLD, &comm_sz); // 프로세스 개수 계산
+
+	//프로세서 0번 ; 데이타를 읽어들인다. 
+	if(my_rank == 0){
+		printf("①셀의 개수, ②벽난로의 온도, ②루프 실행 회수를 차례로 입력하세요. \n"); 
+		fflush(stdout);
+		scanf("%d %d %d", &n, &tempo, &count);
+	}
+	//이제 받은 것으로 malloc을 해준다. 메모리 할당 ; 2차원 배열의 동적 할당 
+
+	//브로드 캐스트 해준다 일단. 모두에게 해주어야 하므로 이렇게 다 같이 해준다. 
+	MPI_Bcast(&n, 1,  MPI_INT, 0, MPI_COMM_WORLD); //전체 셀의 갯수 알려주기 
+	MPI_Bcast(&count, 1,  MPI_INT, 0, MPI_COMM_WORLD); //루프카운터 전해주기 
+
+	cell = (int**)malloc(sizeof(int*)*((n/comm_sz)+2)); //양옆에 까지 할당해주기 위해서... 
+	for(i=0; i<(n/comm_sz)+2; i++){
+		cell[i] = (int*)malloc(sizeof(int)*(n+2));
+	}
+	
+	// 모든 프로세스는 변수 값을 초기화한다.
+	for(i=0; i<(n/comm_sz)+2; i++){
+		for(j=0; j<n+2; j++){
+			cell[i][j]=0;
+			//printf("%d번째 %d 는 = %d, \n ",i, j, cell[i][j]);
+		}
+		//printf("\n");
+	}
+
+	//벽난로 위에는 온도가 있다. 
+	if(my_rank == 0){
+		for(j=0; j<n+2; j++){
+			cell[0][j]=tempo;
+		}	
+	}
+
+	for(k=0; k<count; k++){
+		//온도 계산 해주기
+		for (i = 1; i <=(n/comm_sz); i++){					
+			for (j = 1; j <=n; j++){		
+				cell[i][j] = (cell[i-1][j]+cell[i+1][j]+cell[i][j]+cell[i][j-1]+cell[i][j+1]) / 5;
+				//printf("%d번째 %d 는 = %d, \n ",i, j, cell[i][j]);
+			}
+			//printf("\n");
+		}
+		
+		//send & recv 해주기 
+		if (my_rank % 2 == 0) {	// 프로세스 번호가 짝수인 경우
+			if (my_rank != comm_sz - 1) {  // 맨 마지막 프로세스가 아니라면
+				for(j=0; j<n+2; j++){
+					// 프로세스 (my_rank + 1) 에게 자신의 D 값을 전송하고, 상대방의 B값을 E에 받음
+					MPI_Send(&cell[n/comm_sz][j], 1, MPI_INT, my_rank + 1, 10, MPI_COMM_WORLD);
+					MPI_Recv(&cell[(n/comm_sz)+1][j], 1, MPI_INT, my_rank + 1, 20, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
+				}	
+			}
+		}
+		else {	// 프로세스 번호가 홀수인 경우
+			for(j=0; j<n+2; j++){
+				// 프로세스 (my_rank - 1) 에게서 D 값을 받아 A에 저장하고, 자신의 B 값을 보내줌
+				MPI_Recv(&cell[0][j], 1, MPI_INT, my_rank - 1, 10, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
+				MPI_Send(&cell[1][j], 1, MPI_INT, my_rank - 1, 20, MPI_COMM_WORLD);
+			}	
+		}
+	
+		if (my_rank % 2 != 0) {  // 프로세스 번호가 홀수인 경우
+			if (my_rank != comm_sz - 1) {  // 맨 오른편 프로세스가 아니라면
+				for(j=0; j<n+2; j++){
+					// 프로세스 (my_rank + 1) 에게 자신의 D 값을 전송하고, 상대방의 B값을 E에 받음
+					MPI_Send(&cell[n/comm_sz][j], 1, MPI_INT, my_rank + 1, 30, MPI_COMM_WORLD);
+					MPI_Recv(&cell[(n/comm_sz)+1][j], 1, MPI_INT, my_rank + 1, 40, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
+				}	
+			}
+		}
+		else {	// 프로세스 번호가 짝수인 경우
+			for(j=0; j<n+2; j++){
+			
+				MPI_Recv(&cell[0][j], 1, MPI_INT, my_rank - 1, 30, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
+				MPI_Send(&cell[1][j], 1, MPI_INT, my_rank - 1, 40, MPI_COMM_WORLD);
+			}	
+		}
+	}
+
+	//Gather해 줄 각 열마다 평균을 구한다. 
+	for(i=1; i<=(n/comm_sz); i++){
+		m+=cell[i][n/2];
+	}
+	//열들의 나누어 총 평균을 구한다. 
+	m = m / (n/comm_sz);
+
+
+	// 모든 프로세스의 연산이 끝나면 C값들을 프로세스 0에게 보낸다. (result 배열에 모음)
+	MPI_Gather(&m, 1, MPI_INT, result, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	if(my_rank == 0) {
+		for(i = 0; i < comm_sz; i++) {
+			// 모인 결과 값들을 출력
+			printf("%d ", result[i]); 
+		}
+	}
+
+	// MPI 종료
+	MPI_Finalize();
+	return 0;
+}

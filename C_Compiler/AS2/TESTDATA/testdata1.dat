@@ -1,0 +1,21 @@
+A compiler is a computer program (or set of programs) 
+that transforms source code written in a programming language (the source language) 
+into another computer language (the target language, often having a binary form known as object code)
+const
+else
+if
+return
+void
+while
+real
++
+-
+*
+/
+%
+==
+!=
+<
+>
+<=
+>= 

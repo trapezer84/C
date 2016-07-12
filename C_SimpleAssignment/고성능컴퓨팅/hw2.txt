@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <mpi.h>
+
+int main(void)
+{
+	int my_rank; //Rank of process : 현재 프로세스를 결정 짓는 고유 번호 
+	int comm_sz; //전체 프로세스 : 현재 총 4개 
+	//A-E 까지 각 프로세스가 처리해야할 변수 
+	int A = 0;
+	int B = 0;
+	int C = 0;
+	int D = 0;
+	int E = 0;
+	//중간에 업데이트를 막을 변수 
+	int temp = 0;
+	int temp2 = 0;
+	int temp3 = 0;
+	// for loop 등 조건문에 할당할 변수 
+	int i = 0;
+	//process 0 번째에 Gather할 배열 선언 
+	int p0_recv[4];
+
+	MPI_Init(NULL, NULL);
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+	
+	//모든 변수를 0으로 초기화 한다. 단, 프로세스 0은 A를 1000으로 초기화 한다. 
+	if(my_rank == 0){
+		A = 1000;
+	}
+	//100회의 루프 실행, 자신이 가지고 있는 B,C,D의 값을 각각 양옆에 있는 변수들의 값과 평균을 내어 업데이트 함.
+	for(i=0; i<100; i++){
+		temp = B; //중간 B 계산시 업데이트 된 값으로 계산 방지 위해 temp를 사용한다. 
+		temp2 = C; //B와 마찬가지로 C도 temp2에 값을 할당한다. 
+		temp3 = D;
+		B = (A+temp+temp2)/3; 
+		C = (temp+temp2+temp3)/3;
+		D = (temp2+temp3+E)/3;
+
+		if(my_rank > 0 ) { // Process 0번째 빼고 각 B에서 E로 전달하고 D에서 A로 받아온다. 
+			MPI_Send(&B,1,MPI_INT,my_rank-1,0,MPI_COMM_WORLD); //전 프로세스에 B를 E로 보낸다.
+			MPI_Recv(&A,1,MPI_INT,my_rank-1,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE); //전 프로세스 D에서 받아온다.
+		}
+		if(my_rank < comm_sz-1) { //Process 3번째 빼고 각 D에서 A로 전달하고, B에서 E로 받아온다. 
+			MPI_Send(&D,1,MPI_INT,my_rank+1,0,MPI_COMM_WORLD); //상위 프로세스에게 D를 A로 보낸다. 
+			MPI_Recv(&E,1,MPI_INT,my_rank+1,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE); //상위 프로세서 B에서 E로 받아온다.
+		} 
+	}
+
+	//업데이트를 다 한뒤 모든 프로세서의 중간값인 C를 Gather해서 P0으로 모은다. 
+	MPI_Gather(&C, 1, MPI_INT, p0_recv, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	if(my_rank == 0) {
+		printf( " 프로세스 P0에 모아진 값 4개는 = " );
+		//for loop을 사용하여 하나씩 print하게 해준다. 
+		for(i=0; i<4; i++) printf( " %d" , p0_recv[i]); printf( "\n" );
+	}
+
+	MPI_Finalize();
+	return 0;
+}

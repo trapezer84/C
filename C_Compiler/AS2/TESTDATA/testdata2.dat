@@ -1,0 +1,22 @@
+#define STsize 1000 //size of string table
+#define HTsize 100 //size of hash table
+#define TRUE 1
+#define FALSE 0
+
+typedef struct HTentry *HTpointer;
+typedef struct HTentry {
+ int index;
+ HTpointer next;
+} HTentry;
+abcdEFGdef
+123abc
+#$@$##@
+#AAA
+aaa
+AAA
+0101654
+abcdefgedf
+0x64345
+0X246426
+/**abcdefg***/
+abcdefgdef

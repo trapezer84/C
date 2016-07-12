@@ -1,0 +1,14 @@
+ERROR #3 
+
+THIS IS ERROR CODE ________________+++++__________;
+23hello
+23hellohellohello
+%{ Hello %}
+//my name is 00000wehwalover
+[] -= *8 () ))(
+123 != 123 <= >= -- ++
+1 ~3423 -234 0-234
+int float bool true false 
+<< ? >> for(int t=1 t<n t++)()
+
+THE END

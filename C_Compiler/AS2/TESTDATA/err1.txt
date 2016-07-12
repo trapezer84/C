@@ -1,0 +1,14 @@
+ERROR #1 
+
+void main() {
+
+
+int i; 
+int k; 
+float f; 
+int i=1023123213; 
+printf("hello$$ i love*****you&me %d, i); 
+
+}
+
+//this is error code123402301230

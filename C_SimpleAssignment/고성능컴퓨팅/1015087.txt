@@ -1,0 +1,146 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+namespace ConsoleApplication1
+{
+    class ThreeDShape
+    {
+        protected double a, b, c;
+        protected double v;
+        public ThreeDShape(double x, double y, double z)
+        {
+            a = x; //∞°∑Œ
+            b = y; //ºº∑Œ
+            c = z; //≥Ù¿Ã
+        }
+        public ThreeDShape(ThreeDShape ob)
+        {
+            a = ob.a; //∞°∑Œ
+            b = ob.b; //ºº∑Œ
+            c = ob.c; //≥Ù¿Ã
+        }
+        public virtual void volume()
+        {
+            v = a * b * c;
+        }
+        public void show_dim()
+        {
+            Console.WriteLine("a = " + a + ",  b=" + b + ",  c=" + c);
+        }
+        public void show_volume()
+        {
+            Console.WriteLine("volume is  " + v);
+        }
+    }
+    class TrigPyramid : ThreeDShape
+    {
+        string style;
+        public TrigPyramid(double x, double y, double z, string s): base(x, y, z)
+        {
+            style = s;
+        }
+        public override void volume()
+        {
+            v = ((a * b) / 2) * c * (1/3) ;
+        }
+        public void show_style()
+        {
+            Console.WriteLine("style is" + style);
+        }
+        public TrigPyramid(TrigPyramid ob) : base(ob)
+        {
+            style = ob.style;
+        }
+    }
+    class Cube : ThreeDShape
+    {
+        string style;
+        public Cube(double x, double y, double z, string s): base(x, y, z)
+        {
+            style = s;
+        }
+        public void show_style()
+        {
+            Console.WriteLine("style is" + style);
+        }
+        public Cube(Cube ob) : base(ob)
+        {
+            style = ob.style;
+        }
+    }
+    class QuadPyramid : ThreeDShape
+    {
+        string style;
+        public QuadPyramid(double x, double y, double z, string s): base(x, y, z)
+        {
+            style = s;
+        }
+        public override void volume()
+        {
+            v = a * b * c * (1 / 3);
+        }
+        public void show_style()
+        {
+            Console.WriteLine("style is" + style);
+        }
+        public QuadPyramid(QuadPyramid ob): base(ob)
+        {
+            style = ob.style;
+        }
+    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            {
+                ThreeDShape ob1 = new ThreeDShape(1, 2, 3);
+                ThreeDShape ob2 = new ThreeDShape(ob1);
+                TrigPyramid ob3 = new TrigPyramid(2, 4, 8, "ªœ¡∑ ªÔ∞¢ª‘");
+                TrigPyramid ob4 = new TrigPyramid(ob3);
+                Cube ob5 = new Cube(3, 3, 3, "¡§¿∞∏È√º");
+                Cube ob6 = new Cube(ob5);
+                QuadPyramid ob7 = new QuadPyramid(6, 8, 12, "¡˜ªÁ∞¢ª‘");
+                QuadPyramid ob8 = new QuadPyramid(ob7);
+                ob1.show_dim();
+                ob1.volume();
+                ob1.show_volume();
+                Console.WriteLine();
+                ob2.show_dim();
+                ob2.volume();
+                ob2.show_volume();
+                Console.WriteLine();
+                ob3.show_dim();
+                ob3.volume();
+                ob3.show_volume();
+                ob3.show_style();
+                Console.WriteLine();
+                ob4.show_dim();
+                ob4.volume();
+                ob4.show_volume();
+                ob4.show_style();
+                Console.WriteLine();
+                ob5.show_dim();
+                ob5.volume();
+                ob5.show_volume();
+                ob5.show_style();
+                Console.WriteLine();
+                ob6.show_dim();
+                ob6.volume();
+                ob6.show_volume();
+                ob6.show_style();
+                Console.WriteLine();
+                ob7.show_dim();
+                ob7.volume();
+                ob7.show_volume();
+                ob7.show_style();
+                Console.WriteLine();
+                ob8.show_dim();
+                ob8.volume();
+                ob8.show_volume();
+                ob8.show_style();
+                Console.WriteLine();
+            }
+        }
+    }
+}
